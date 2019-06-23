@@ -20,7 +20,6 @@ class SortButtonBuilder extends StatefulWidget {
 
 class _SortButtonBuilderState extends State<SortButtonBuilder> {
   String selectedSort;
-  bool _descending = true;
 
   @override
   void initState() {
@@ -38,15 +37,12 @@ class _SortButtonBuilderState extends State<SortButtonBuilder> {
         final buttonTitle = buttonTitles[index];
 
         return SortButton(
-//          descending: _descending,
           isSelected: selectedSort == buttonTitle,
           title: buttonTitle,
           color: buttonTitle == selectedSort ? Colors.black87 : Colors.white,
           onPressed: (d) {
             setState(() {
               selectedSort = buttonTitle;
-//              _descending = !_descending;
-//              print(_descending);
               print('$buttonTitle: desc = $d');
             });
           },

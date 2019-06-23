@@ -1,14 +1,20 @@
 import 'package:elliot/tags/tag.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+import 'package:uuid/uuid.dart';
 
 class Task {
-  Tag tag;
-  final int id;
+  final Tag tag;
+  final String id;
   final String title;
   final String description;
   final String details;
   DateTime deadline;
   int progress;
+
+  final DateTime dateCreated;
 
   Task({
     @required this.id,
@@ -18,59 +24,77 @@ class Task {
     this.details,
     this.deadline,
     this.progress,
+    this.dateCreated,
   });
 
   Task copyWith({
-    int id,
     Tag tag,
     String title,
     String description,
     String details,
-    DateTime dueDate,
+    DateTime dateCreated,
+    DateTime deadline,
     int progress,
   }) {
     return Task(
-      id: id ?? this.id,
+      id: this.id,
       tag: tag,
       title: title ?? this.title,
       description: description ?? this.description,
       details: details ?? this.details,
-      deadline: dueDate ?? this.deadline,
+      deadline: deadline ?? this.deadline,
+      dateCreated: dateCreated ?? this.deadline,
       progress: progress ?? this.progress,
     );
   }
 
   factory Task.initial() {
     return Task(
-      id: DateTime.now().millisecondsSinceEpoch,
+      id: Uuid().v4(),
+      dateCreated: DateTime.now(),
       title: '',
+      tag: null,
       description: '',
       details: '',
       progress: 0,
-      deadline: DateTime.now(),
+      deadline: null,
     );
   }
 
   factory Task.fromMap(Map<String, dynamic> map) {
-    return Task(
+    final task = Task(
       id: map['id'] ?? '',
-      tag: map['tag'] ?? '',
+      tag: map['tagTitle'] == null
+          ? null
+          : Tag(title: map['tagTitle'], color: Color(map['tagColor'])),
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       details: map['details'] ?? '',
+      dateCreated:
+          DateTime.fromMillisecondsSinceEpoch((map['dateCreated'] as int)),
+      deadline: map['deadline'] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch((map['deadline'] as int)),
+      progress: map['progress'] ?? 0,
     );
+    return task;
   }
 
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
-      'tag': tag.title,
+      'id': id,
+      'tagTitle': tag == null ? null : tag.title,
+      'tagColor': tag == null ? null : tag.color.value,
       'title': title,
       'description': description,
       'details': details,
+      //SQL only supports int type
+      'dateCreated':
+          dateCreated == null ? null : dateCreated.millisecondsSinceEpoch,
+      'deadline': deadline == null ? null : deadline.millisecondsSinceEpoch,
+      'progress': progress
     };
-    if (id != null) {
-      map['id'] = id;
-    }
+
     return map;
   }
 }

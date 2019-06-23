@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'data/database_manager.dart';
+
 void main() => runApp(MyApp());
 
 final GlobalKey tabBarGlobalKey = GlobalKey();
@@ -50,6 +52,11 @@ class _HomePageState extends State<HomePage> {
   final _pageController = PageController();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var editModel = Provider.of<EditModel>(context);
 
@@ -69,7 +76,6 @@ class _HomePageState extends State<HomePage> {
         child: Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
       body: PageView(
         physics: NeverScrollableScrollPhysics(),
         controller: _pageController,
@@ -77,7 +83,8 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           Consumer<TaskListModel>(
             builder: (context, model, _) {
-              return TaskListPage(tasks: model.tasks);
+              model.initTasks();
+              return TaskListPage();
             },
           ),
           Container(
@@ -85,7 +92,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-
       bottomNavigationBar: BottomAppBar(
         notchMargin: 10,
         shape: CircularNotchedRectangle(),
@@ -118,41 +124,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-//      bottomNavigationBar: BottomAppBar(
-//        key: tabBarGlobalKey,
-//        items: <BottomNavigationBarItem>[
-//          BottomNavigationBarItem(icon: Icon(Icons.home)),
-//          BottomNavigationBarItem(icon: Icon(Icons.add)),
-//          BottomNavigationBarItem(icon: Icon(Icons.history)),
-//        ],
-//      ),
-//      tabBuilder: (context, index) {
-//        assert(index >= 0 && index <= 2);
-//        switch (index) {
-//          case 0:
-//            return CupertinoTabView(builder: (context) {
-//              return Consumer<TaskListModel>(builder: (context, model, _) {
-//                return TaskListPage(
-//                  tasks: model.tasks,
-//                );
-//              });
-//            });
-//          case 1:
-//            return CupertinoTabView(
-//              builder: (context) => Container(
-//                color: Colors.blue,
-//                child: EditPage(),
-//              ),
-//            );
-//          case 2:
-//            return CupertinoTabView(
-//              builder: (context) => Container(
-//                color: Colors.green,
-//              ),
-//            );
-//        }
-//        return null;
-//      },
     );
   }
 }

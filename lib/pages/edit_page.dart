@@ -1,9 +1,9 @@
 import 'package:date_format/date_format.dart';
 import 'package:elliot/components/headline.dart';
 import 'package:elliot/components/tag_search.dart';
+import 'package:elliot/data/database_manager.dart';
 import 'package:elliot/models/task.dart';
 import 'package:elliot/tags/tag_sticker.dart';
-import 'package:elliot/view_models/deadline.dart';
 import 'package:elliot/view_models/edit_model.dart';
 import 'package:elliot/view_models/progress_model.dart';
 import 'package:elliot/view_models/task_list_model.dart';
@@ -51,122 +51,127 @@ class _EditPageState extends State<EditPage> {
     var editModel = Provider.of<EditModel>(context);
     var taskListModel = Provider.of<TaskListModel>(context);
 
-    return ChangeNotifierProvider<Deadline>(
-      builder: (context) => Deadline(),
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: true,
-          title: Text('Edit'),
-        ),
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Container(
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        title: Text('Edit'),
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
 //            color: Colors.grey[100],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(height: 40),
-                  Consumer<EditModel>(
-                    builder: (context, model, child) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          model.task.tag != null
-                              ? GestureDetector(
-                                  onTap: () => goToTagSearchPage(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 30),
-                                    child: Transform.scale(
-                                        scale: 1.2,
-                                        child: TagSticker(tag: model.task.tag)),
-                                  ),
-                                )
-                              : AddTagButton(
-                                  onPressed: () => goToTagSearchPage(context),
-                                ),
-                          if (model.task.tag != null)
-                            GestureDetector(
-                              onTap: () {
-                                model.addTag(null);
-                              },
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Text(
-                                  'remove tag'.toUpperCase(),
-                                  style: TextStyle(
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.normal),
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(height: 20),
+                ChangeNotifierProvider<ProgressModel>(
+                  builder: (context) => ProgressModel(),
+                  child: ProgressSlider(
+                    progress: currentTask.progress,
+                    onValueChanged: (newValue) {
+                      setState(() {
+                        currentTask.progress = newValue;
+                      });
                     },
                   ),
-                  SizedBox(height: 20),
-                  Container(height: 1.5, color: Colors.black),
-                  SizedBox(height: 20),
-                  Headline(
-                    title: 'task',
-                    trailing: OutlineButton(
-                      borderSide: BorderSide(color: Colors.black),
-                      onPressed: !_enableSaveButton
-                          ? null
-                          : () {
-                              if (_titleController.text.isEmpty) return null;
-                              final newTask = Task(
-                                tag: editModel.task.tag,
-                                id: DateTime.now().millisecondsSinceEpoch,
-                                title: _titleController.text,
-                                description: _descriptionController.text,
-                                details: _detailsController.text,
-                                progress: currentTask.progress,
-                                deadline: currentTask.deadline,
-                              );
-                              taskListModel.task(newTask);
+                ),
+                SizedBox(height: 10),
+
+                Consumer<EditModel>(
+                  builder: (context, model, child) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        model.task.tag != null
+                            ? GestureDetector(
+                                onTap: () => goToTagSearchPage(context),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 30),
+                                  child: Transform.scale(
+                                      scale: 1.2,
+                                      child: TagSticker(tag: model.task.tag)),
+                                ),
+                              )
+                            : AddTagButton(
+                                onPressed: () => goToTagSearchPage(context),
+                              ),
+                        if (model.task.tag != null)
+                          GestureDetector(
+                            onTap: () {
+                              model.addTag(null);
                             },
-                      child: Text('Save'.toUpperCase()),
-                    ),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'remove tag'.toUpperCase(),
+                                style: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.normal),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
+                Container(height: 1.5, color: Colors.black),
+                SizedBox(height: 20),
+                Headline(
+                  title: 'task',
+                  trailing: OutlineButton(
+                    borderSide: BorderSide(color: Colors.black),
+                    onPressed: !_enableSaveButton
+                        ? null
+                        : () {
+                            if (_titleController.text.isEmpty) return null;
+                            final newTask = currentTask.copyWith(
+                              tag: editModel.task.tag,
+                              title: _titleController.text,
+                              description: _descriptionController.text,
+                              details: _detailsController.text,
+                              progress: currentTask.progress,
+                              deadline: currentTask.deadline,
+                              dateCreated: DateTime.now(),
+                            );
+                            taskListModel.task(newTask);
+                            DatabaseManager.instance.insert(newTask);
+                          },
+                    child: Text('Save'.toUpperCase()),
                   ),
-                  AddTaskTextField(
+                ),
+                AddTaskTextField(
 //                    autoFocus: true,
-                    controller: _titleController,
-                    hint: 'Task Name',
-                    icon: Icons.adjust,
-                  ),
-                  AddTaskTextField(
-                    controller: _descriptionController,
-                    hint: 'Short Description',
-                    icon: Icons.details,
-                  ),
-                  SizedBox(height: 20),
-                  DetailsTextField(
-                    controller: _detailsController,
-                  ),
+                  controller: _titleController,
+                  hint: 'Task Name',
+                  icon: Icons.adjust,
+                ),
+                AddTaskTextField(
+                  controller: _descriptionController,
+                  hint: 'Short Description',
+                  icon: Icons.details,
+                ),
+                SizedBox(height: 20),
+                DetailsTextField(
+                  controller: _detailsController,
+                ),
 //                SizedBox(height: 20),
-                  DeadlinePicker(
-                    deadline: currentTask.deadline,
-                    onValueChanged: (val) => currentTask.deadline = val,
-                  ),
-                  SizedBox(height: 20),
-                  ChangeNotifierProvider<ProgressModel>(
-                    builder: (context) => ProgressModel(),
-                    child: ProgressSlider(
-                      progress: currentTask.progress,
-                      onValueChanged: (newValue) {
-                        setState(() {
-                          currentTask.progress = newValue;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 40),
-                ],
-              ),
+                DeadlinePicker(
+                  deadline: currentTask.deadline,
+                  onValueChanged: (val) => currentTask.deadline = val,
+                  hasDeadline: (val) {
+                    if (val == false) {
+                      currentTask.deadline = null;
+                    }
+                  },
+                ),
+
+                SizedBox(height: 40),
+              ],
             ),
           ),
         ),
@@ -271,10 +276,12 @@ class AddTaskTextField extends StatelessWidget {
 }
 
 class DeadlinePicker extends StatefulWidget {
-  final DateTime deadline;
+  DateTime deadline;
   final Function(DateTime) onValueChanged;
+  final Function(bool) hasDeadline;
 
-  DeadlinePicker({Key key, this.deadline, this.onValueChanged})
+  DeadlinePicker(
+      {Key key, this.deadline, this.onValueChanged, this.hasDeadline})
       : super(key: key);
   @override
   _DeadlinePickerState createState() => _DeadlinePickerState();
@@ -290,20 +297,6 @@ class _DeadlinePickerState extends State<DeadlinePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final shouldShowYear = widget.deadline.year != DateTime.now().year;
-    final formattedDate = formatDate(widget.deadline, [
-      dd,
-      ' ',
-      M,
-      ' ',
-      shouldShowYear ? yyyy : '',
-      ' • ',
-      h,
-      ':',
-      nn,
-      ' ',
-      am,
-    ]).toUpperCase();
     final _textStyle =
         Theme.of(context).textTheme.subhead.copyWith(color: Colors.grey);
     return Column(
@@ -321,7 +314,12 @@ class _DeadlinePickerState extends State<DeadlinePicker> {
                     if (val == false) {
                       print('null it');
 //                      deadline = null;
+//                      widget.deadline = null;
+                      widget.hasDeadline(val);
+                    } else {
+//                      widget.deadline = DateTime.now();
                     }
+
                     _showPicker = val;
                   });
                 },
@@ -333,7 +331,7 @@ class _DeadlinePickerState extends State<DeadlinePicker> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              formattedDate,
+              formattedDate(widget.deadline),
               style: _textStyle,
             ),
           ),
@@ -346,7 +344,6 @@ class _DeadlinePickerState extends State<DeadlinePicker> {
                 onDateTimeChanged: (val) {
                   setState(() {
                     widget.onValueChanged(val);
-//                    deadline.setNewDeadline(val);
                   });
                 },
               )),
@@ -439,4 +436,22 @@ class DetailsTextField extends StatelessWidget {
 void goToTagSearchPage(BuildContext context) {
   Navigator.of(context)
       .push(MaterialPageRoute(builder: (context) => TagSearch()));
+}
+
+String formattedDate(DateTime deadline) {
+  final shouldShowYear = deadline.year != DateTime.now().year;
+  final formattedDate = formatDate(deadline, [
+    dd,
+    ' ',
+    M,
+    ' ',
+    shouldShowYear ? yyyy : '',
+    ' • ',
+    h,
+    ':',
+    nn,
+    ' ',
+    am,
+  ]).toUpperCase();
+  return formattedDate;
 }

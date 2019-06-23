@@ -14,6 +14,7 @@ class DatabaseManager {
 
   // Only allow a single open connection to the database.
   static Database _database;
+
   Future<Database> get database async {
     if (_database != null) return _database;
     _database = await _initDatabase();
@@ -21,7 +22,7 @@ class DatabaseManager {
   }
 
   // open the database
-  _initDatabase() async {
+  Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), _databaseName);
 
     // Open the database. Can also add an onUpdate callback parameter.
@@ -31,17 +32,32 @@ class DatabaseManager {
 
   // SQL string to create the database
   Future _onCreate(Database db, int version) async {
-    await db.execute('''
-              CREATE TABLE tasks (
-                id INTEGER PRIMARY KEY,
-                tag TEXT,
+    return await db.execute('''
+              CREATE TABLE tasks(
+                id STRING PRIMARY KEY,
+                tagTitle TEXT,
+                tagColor INT,
                 title TEXT NOT NULL,
                 description TEXT NOT NULL,
+                details TEXT NOT NULL,
+                progress INT NOT NULL,
+                deadline INT,
+                dateCreated INT NOT NULL
               )
               ''');
   }
 
   // Database helper methods:
+
+  Future<List<Task>> getTasks() async {
+    Database db = await database;
+    List<Map> maps = await db.query(
+      'tasks',
+    );
+    return List.generate(maps.length, (i) {
+      return Task.fromMap(maps[i]);
+    });
+  }
 
   Future<int> insert(Task task) async {
     Database db = await database;
@@ -50,7 +66,20 @@ class DatabaseManager {
       task.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    print(task.toMap());
     return id;
+  }
+
+  Future<void> update(Task task) async {
+    Database db = await database;
+    await db
+        .update('tasks', task.toMap(), where: "id = ?", whereArgs: [task.id]);
+    print(task.toMap());
+  }
+
+  Future<void> delete(String id) async {
+    Database db = await database;
+    await db.delete('tasks', where: "id = ?", whereArgs: [id]);
   }
 
   Future<List<Task>> queryTask(int id) async {

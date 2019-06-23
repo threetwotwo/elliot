@@ -2,8 +2,10 @@ import 'package:elliot/components/empty_screen.dart';
 import 'package:elliot/components/headline.dart';
 import 'package:elliot/components/sort_buttons_builder.dart';
 import 'package:elliot/components/task_list_item.dart';
+import 'package:elliot/data/database_manager.dart';
 import 'package:elliot/models/task.dart';
 import 'package:elliot/view_models/edit_model.dart';
+import 'package:elliot/view_models/task_list_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,17 +13,21 @@ import 'package:provider/provider.dart';
 import 'edit_page.dart';
 
 class TaskListPage extends StatefulWidget {
-  final List<Task> tasks;
-
-  TaskListPage({Key key, this.tasks}) : super(key: key);
-
   @override
   _TaskListPageState createState() => _TaskListPageState();
 }
 
 class _TaskListPageState extends State<TaskListPage> {
   @override
+  initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    TaskListModel taskModel = Provider.of<TaskListModel>(context);
+    final List<Task> tasks = taskModel.tasks;
+
     return Scaffold(
       appBar: AppBar(
         title: Headline(
@@ -30,77 +36,55 @@ class _TaskListPageState extends State<TaskListPage> {
         ),
       ),
       body: SafeArea(
-        child: widget.tasks.isEmpty
+        child: tasks.isEmpty
             ? EmptyScreen(
                 icon: Icons.adjust,
                 title: 'You currently have no tasks.',
                 buttonTitle: 'Add new task',
                 onButtonPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
                       fullscreenDialog: true,
-                      builder: (context) => EditPage()));
+                      builder: (context) => EditPage(
+                        task: Task.initial(),
+                      ),
+                    ),
+                  );
                 },
               )
             : Column(
                 children: <Widget>[
                   SizedBox(height: 20),
-//                  Padding(
-//                    padding: const EdgeInsets.all(10.0),
-//                    child: Text(
-//                      'Sort by:'.toUpperCase(),
-//                      style: TextStyle(color: Colors.black),
-//                    ),
-//                  ),
                   SizedBox(
                     height: 40,
                     child: SortButtonBuilder(
                       initialSort: 'Date added',
                     ),
-//                    child: ListView.builder(
-//                        scrollDirection: Axis.horizontal,
-//                        itemCount: sortButtons.length,
-//                        itemBuilder: (context, index) {
-//                          return GestureDetector(
-//                              onTap: () => sortButtons[index].onPressed,
-//                              child: sortButtons[index]);
-//                        }),
                   ),
-//                  SingleChildScrollView(
-//                    scrollDirection: Axis.horizontal,
-//                    child: Row(
-//                      children: <Widget>[
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                        SortByButton(),
-//                      ],
-//                    ),
-//                  ),
                   SizedBox(height: 10),
-
                   Expanded(
                     child: ListView.builder(
-                        itemCount: widget.tasks.length,
+                        itemCount: tasks.length,
                         itemBuilder: (context, index) {
                           return Dismissible(
-                            key: Key(widget.tasks[index].id.toString()),
+                            key: Key(tasks[index].id.toString()),
                             onDismissed: (direction) {
                               print(direction);
-//                    if (direction == DismissDirection.endToStart)
-                              setState(() {
-                                widget.tasks.removeAt(index);
-                              });
+                              //delete task
+                              if (direction == DismissDirection.endToStart) {
+                                //update UI by updating the view model
+                                taskModel.remove(tasks[index].id);
+                                //update database
+                                DatabaseManager.instance
+                                    .delete(tasks[index].id);
+                              } else if (direction ==
+                                  DismissDirection.startToEnd) {
+                                taskModel.remove(tasks[index].id);
+                                DatabaseManager.instance
+                                    .delete(tasks[index].id);
+                                //TODO: move task to another database
+                              } else
+                                return;
                             },
                             background: Card(
                               child: Container(
@@ -135,19 +119,19 @@ class _TaskListPageState extends State<TaskListPage> {
                             child: InkWell(
                               onTap: () {
                                 Provider.of<EditModel>(context)
-                                    .newTask(widget.tasks[index]);
+                                    .newTask(tasks[index]);
                                 return Navigator.of(context)
                                     .push(MaterialPageRoute(
                                         fullscreenDialog: true,
                                         builder: (context) => EditPage(
-                                              task: widget.tasks[index],
+                                              task: tasks[index],
                                             )));
                               },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 8.0),
                                 child: TaskListItem(
-                                  task: widget.tasks[index],
+                                  task: tasks[index],
                                 ),
                               ),
                             ),
@@ -163,7 +147,7 @@ class _TaskListPageState extends State<TaskListPage> {
 
 class SortByButton extends StatelessWidget {
   final String title;
-  Color color;
+  final Color color;
   final Function onPressed;
 
   SortByButton(
