@@ -6,17 +6,18 @@ import 'package:flutter/material.dart';
 class TaskListItem extends StatelessWidget {
   final Task task;
   final TextStyle _progressStyle = TextStyle(
-    color: Colors.black45,
+    color: Colors.deepPurple[900],
     fontSize: 15,
     fontWeight: FontWeight.bold,
   );
   final TextStyle _titleStyle = TextStyle(
     color: Colors.black,
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
+    fontSize: 18,
+    fontWeight: FontWeight.normal,
+//    letterSpacing: 0.3,
   );
   final TextStyle _descriptionStyle = TextStyle(
-    color: Colors.black,
+    color: Colors.grey[600],
     fontSize: 15,
   );
 
@@ -124,10 +125,10 @@ class TaskListItem extends StatelessWidget {
 String formattedDate(DateTime deadline) {
   final shouldShowYear = deadline.year > DateTime.now().year;
   return formatDate(deadline, [
-    dd,
-    ' ',
     M,
     ' ',
+    d,
+    shouldShowYear ? ', ' : ' ',
     shouldShowYear ? yyyy : '',
   ]).toUpperCase();
 }
@@ -140,15 +141,4 @@ String formattedTime(DateTime deadline) {
     ' ',
     am,
   ]).toUpperCase();
-}
-
-String timeRemaining(DateTime deadline) {
-  final millisecondsRemaining =
-      deadline.millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch;
-  print(millisecondsRemaining);
-  final daysRemaining =
-      ((millisecondsRemaining / (1000 * 60 * 60 * 24)) % 7).toInt().toString() +
-          ' days';
-
-  return millisecondsRemaining.toString();
 }

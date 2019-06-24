@@ -1,17 +1,13 @@
 import 'package:elliot/models/task.dart';
 import 'package:elliot/pages/edit_page.dart';
-import 'package:elliot/pages/task_list_page.dart';
+import 'package:elliot/pages/home_page.dart';
 import 'package:elliot/view_models/edit_model.dart';
-import 'package:elliot/view_models/task_list_model.dart';
+import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data/database_manager.dart';
-
 void main() => runApp(MyApp());
-
-final GlobalKey tabBarGlobalKey = GlobalKey();
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -20,12 +16,11 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          builder: (context) => TaskListModel(),
+          builder: (context) => HomeModel(),
         ),
         ChangeNotifierProvider(
           builder: (context) => EditModel(),
         ),
-        Provider(builder: (context) => tabBarGlobalKey),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
@@ -37,18 +32,18 @@ class MyApp extends StatelessWidget {
           // Define the default font family.
           fontFamily: 'Futura',
         ),
-        home: HomePage(),
+        home: MainPage(),
       ),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
+class MainPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _MainPageState createState() => _MainPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _MainPageState extends State<MainPage> {
   final _pageController = PageController();
 
   @override
@@ -81,10 +76,10 @@ class _HomePageState extends State<HomePage> {
         controller: _pageController,
         onPageChanged: (i) => print(i),
         children: <Widget>[
-          Consumer<TaskListModel>(
+          Consumer<HomeModel>(
             builder: (context, model, _) {
               model.initTasks();
-              return TaskListPage();
+              return HomePage();
             },
           ),
           Container(

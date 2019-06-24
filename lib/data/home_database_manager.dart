@@ -2,15 +2,15 @@ import 'package:elliot/models/task.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DatabaseManager {
+class HomeDatabase {
   // This is the actual database filename that is saved in the docs directory.
   static final _databaseName = "MyDatabase.db";
   // Increment this version when you need to change the schema.
   static final _databaseVersion = 1;
 
 // Make this a singleton class.
-  DatabaseManager._privateConstructor();
-  static final instance = DatabaseManager._privateConstructor();
+  HomeDatabase._privateConstructor();
+  static final instance = HomeDatabase._privateConstructor();
 
   // Only allow a single open connection to the database.
   static Database _database;
@@ -80,6 +80,11 @@ class DatabaseManager {
   Future<void> delete(String id) async {
     Database db = await database;
     await db.delete('tasks', where: "id = ?", whereArgs: [id]);
+  }
+
+  Future<void> deleteAll() async {
+    Database db = await database;
+    await db.delete('tasks');
   }
 
   Future<List<Task>> queryTask(int id) async {

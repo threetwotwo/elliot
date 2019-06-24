@@ -1,23 +1,24 @@
+import 'package:date_format/date_format.dart';
 import 'package:elliot/components/empty_screen.dart';
 import 'package:elliot/components/headline.dart';
 import 'package:elliot/components/sort_buttons_builder.dart';
 import 'package:elliot/components/task_list_item.dart';
-import 'package:elliot/data/database_manager.dart';
+import 'package:elliot/data/home_database_manager.dart';
 import 'package:elliot/models/task.dart';
 import 'package:elliot/view_models/edit_model.dart';
-import 'package:elliot/view_models/task_list_model.dart';
+import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'edit_page.dart';
 
-class TaskListPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  _TaskListPageState createState() => _TaskListPageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _TaskListPageState extends State<TaskListPage> {
+class _HomePageState extends State<HomePage> {
   @override
   initState() {
     super.initState();
@@ -25,14 +26,58 @@ class _TaskListPageState extends State<TaskListPage> {
 
   @override
   Widget build(BuildContext context) {
-    TaskListModel taskModel = Provider.of<TaskListModel>(context);
-    final List<Task> tasks = taskModel.tasks;
+    HomeModel homeModel = Provider.of<HomeModel>(context);
+    final List<Task> tasks = homeModel.tasks;
 
     return Scaffold(
       appBar: AppBar(
         title: Headline(
           title: 'Tasks',
-          trailing: Icon(Icons.sort_by_alpha),
+          trailing: GestureDetector(
+            onLongPress: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Are you sure you want to '
+                          'delete all tasks?'),
+                      content: Text(
+                        'This action cannot be undone.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('Cancel'.toUpperCase()),
+                        ),
+                        FlatButton(
+                          onPressed: () {
+                            HomeDatabase.instance.deleteAll();
+                            return Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            'delete'.toUpperCase(),
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  });
+            },
+            child: Text(
+              formatDate(DateTime.now(), [
+                D,
+                ', ',
+                M,
+                ' ',
+                d,
+              ]).toUpperCase(),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+              ),
+            ),
+          ),
         ),
       ),
       body: SafeArea(
@@ -73,15 +118,13 @@ class _TaskListPageState extends State<TaskListPage> {
                               //delete task
                               if (direction == DismissDirection.endToStart) {
                                 //update UI by updating the view model
-                                taskModel.remove(tasks[index].id);
+                                homeModel.remove(tasks[index].id);
                                 //update database
-                                DatabaseManager.instance
-                                    .delete(tasks[index].id);
+                                HomeDatabase.instance.delete(tasks[index].id);
                               } else if (direction ==
                                   DismissDirection.startToEnd) {
-                                taskModel.remove(tasks[index].id);
-                                DatabaseManager.instance
-                                    .delete(tasks[index].id);
+                                homeModel.remove(tasks[index].id);
+                                HomeDatabase.instance.delete(tasks[index].id);
                                 //TODO: move task to another database
                               } else
                                 return;

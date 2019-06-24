@@ -1,12 +1,12 @@
 import 'package:date_format/date_format.dart';
 import 'package:elliot/components/headline.dart';
 import 'package:elliot/components/tag_search.dart';
-import 'package:elliot/data/database_manager.dart';
+import 'package:elliot/data/home_database_manager.dart';
 import 'package:elliot/models/task.dart';
 import 'package:elliot/tags/tag_sticker.dart';
 import 'package:elliot/view_models/edit_model.dart';
 import 'package:elliot/view_models/progress_model.dart';
-import 'package:elliot/view_models/task_list_model.dart';
+import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,8 +24,6 @@ class _EditPageState extends State<EditPage> {
   final _descriptionController = TextEditingController();
   final _detailsController = TextEditingController();
 
-  bool _enableSaveButton = false;
-
   Task currentTask;
 
   @override
@@ -35,7 +33,6 @@ class _EditPageState extends State<EditPage> {
     _titleController.text = task.title;
     _descriptionController.text = task.description;
     _detailsController.text = task.details;
-    _titleController.addListener(_monitorTitleTextLength);
     super.initState();
   }
 
@@ -49,12 +46,41 @@ class _EditPageState extends State<EditPage> {
   @override
   Widget build(BuildContext context) {
     var editModel = Provider.of<EditModel>(context);
-    var taskListModel = Provider.of<TaskListModel>(context);
+    var taskListModel = Provider.of<HomeModel>(context);
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
         title: Text('Edit'),
+        actions: <Widget>[
+          FlatButton(
+            onPressed: _titleController.text.isEmpty
+                ? null
+                : () {
+                    if (_titleController.text.isEmpty) return null;
+                    final newTask = currentTask.copyWith(
+                      tag: editModel.task.tag,
+                      title: _titleController.text,
+                      description: _descriptionController.text,
+                      details: _detailsController.text,
+                      progress: currentTask.progress,
+                      deadline: currentTask.deadline,
+                      dateCreated: DateTime.now(),
+                    );
+                    taskListModel.task(newTask);
+                    HomeDatabase.instance.insert(newTask);
+                  },
+            child: Text(
+              'Save'.toUpperCase(),
+              style: TextStyle(
+                color: _titleController.text.isEmpty
+                    ? Colors.grey
+                    : Colors.blueAccent,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -123,26 +149,7 @@ class _EditPageState extends State<EditPage> {
                 SizedBox(height: 20),
                 Headline(
                   title: 'task',
-                  trailing: OutlineButton(
-                    borderSide: BorderSide(color: Colors.black),
-                    onPressed: !_enableSaveButton
-                        ? null
-                        : () {
-                            if (_titleController.text.isEmpty) return null;
-                            final newTask = currentTask.copyWith(
-                              tag: editModel.task.tag,
-                              title: _titleController.text,
-                              description: _descriptionController.text,
-                              details: _detailsController.text,
-                              progress: currentTask.progress,
-                              deadline: currentTask.deadline,
-                              dateCreated: DateTime.now(),
-                            );
-                            taskListModel.task(newTask);
-                            DatabaseManager.instance.insert(newTask);
-                          },
-                    child: Text('Save'.toUpperCase()),
-                  ),
+                  trailing: null,
                 ),
                 AddTaskTextField(
 //                    autoFocus: true,
@@ -177,12 +184,6 @@ class _EditPageState extends State<EditPage> {
         ),
       ),
     );
-  }
-
-  void _monitorTitleTextLength() {
-    setState(() {
-      _enableSaveButton = _titleController.text.isNotEmpty;
-    });
   }
 }
 
@@ -441,10 +442,10 @@ void goToTagSearchPage(BuildContext context) {
 String formattedDate(DateTime deadline) {
   final shouldShowYear = deadline.year != DateTime.now().year;
   final formattedDate = formatDate(deadline, [
-    dd,
-    ' ',
     M,
     ' ',
+    d,
+    shouldShowYear ? ', ' : ' ',
     shouldShowYear ? yyyy : '',
     ' • ',
     h,
