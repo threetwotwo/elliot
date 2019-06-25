@@ -4,15 +4,20 @@ List<String> buttonTitles = [
   'Date added',
   'Progress',
   'Title',
+  'Deadline',
   'Tag',
 ];
 
 class SortButtonBuilder extends StatefulWidget {
   final String initialSort;
   final int itemCount;
-
-  const SortButtonBuilder({Key key, this.initialSort, this.itemCount})
-      : super(key: key);
+  final Function(String, bool) onSelected;
+  const SortButtonBuilder({
+    Key key,
+    this.initialSort,
+    this.itemCount,
+    this.onSelected,
+  }) : super(key: key);
 
   @override
   _SortButtonBuilderState createState() => _SortButtonBuilderState();
@@ -40,11 +45,12 @@ class _SortButtonBuilderState extends State<SortButtonBuilder> {
           isSelected: selectedSort == buttonTitle,
           title: buttonTitle,
           color: buttonTitle == selectedSort ? Colors.black87 : Colors.white,
-          onPressed: (d) {
+          onPressed: (desc) {
             setState(() {
               selectedSort = buttonTitle;
-              print('$buttonTitle: desc = $d');
+//              print('$buttonTitle: desc = $desc');
             });
+            widget.onSelected(buttonTitle, desc);
           },
         );
       },

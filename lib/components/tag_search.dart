@@ -13,21 +13,23 @@ class TagResult extends StatelessWidget {
   const TagResult({Key key, this.tag, this.onTap}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(20),
-      height: 50,
-      child: FittedBox(
-        child: GestureDetector(
-          onTap: () {
-            print(tag.title);
-            onTap(this.tag);
-          },
-          child: TagSticker(
-            tag: this.tag,
-          ),
-        ),
-      ),
-    );
+    return tag.title.isEmpty
+        ? SizedBox()
+        : Container(
+            margin: EdgeInsets.all(20),
+            height: 50,
+            child: FittedBox(
+              child: GestureDetector(
+                onTap: () {
+                  print(tag.title);
+                  onTap(this.tag);
+                },
+                child: TagSticker(
+                  tag: this.tag,
+                ),
+              ),
+            ),
+          );
   }
 }
 
@@ -143,16 +145,16 @@ class _TagSearchState extends State<TagSearch> {
                   ),
                 ),
                 SizedBox(height: 30),
-                ...results
-                    .map((tag) => TagResult(
-                          tag: tag,
-                          onTap: (tag) {
-                            print(tag.title);
-                            model.addTag(tag);
-                            Navigator.of(context).pop();
-                          },
-                        ))
-                    .toList(),
+                ...results.map((tag) {
+                  return TagResult(
+                    tag: tag,
+                    onTap: (tag) {
+                      print(tag.title);
+                      model.addTag(tag);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                }).toList(),
               ])
             ],
           ),

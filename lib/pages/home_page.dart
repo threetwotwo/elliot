@@ -4,8 +4,8 @@ import 'package:elliot/components/headline.dart';
 import 'package:elliot/components/sort_buttons_builder.dart';
 import 'package:elliot/components/task_list_item.dart';
 import 'package:elliot/data/home_database_manager.dart';
+import 'package:elliot/data/shared_preferences.dart';
 import 'package:elliot/models/task.dart';
-import 'package:elliot/view_models/edit_model.dart';
 import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,14 +20,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   @override
-  initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     HomeModel homeModel = Provider.of<HomeModel>(context);
-    final List<Task> tasks = homeModel.tasks;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +47,7 @@ class _HomePageState extends State<HomePage> {
                         FlatButton(
                           onPressed: () {
                             HomeDatabase.instance.deleteAll();
+                            homeModel.deleteAll();
                             return Navigator.of(context).pop();
                           },
                           child: Text(
@@ -73,7 +68,7 @@ class _HomePageState extends State<HomePage> {
                 d,
               ]).toUpperCase(),
               style: TextStyle(
-                color: Colors.grey,
+                color: Colors.grey[800],
                 fontSize: 15,
               ),
             ),
@@ -81,7 +76,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       body: SafeArea(
-        child: tasks.isEmpty
+        child: homeModel.tasks.isEmpty
             ? EmptyScreen(
                 icon: Icons.adjust,
                 title: 'You currently have no tasks.',
@@ -104,30 +99,37 @@ class _HomePageState extends State<HomePage> {
                     height: 40,
                     child: SortButtonBuilder(
                       initialSort: 'Date added',
+                      onSelected: (String buttonTitle, bool desc) {
+                        print('$buttonTitle: desc = $desc');
+                        SharedPrefsManager.instance
+                            .setSort(title: buttonTitle, isDesc: desc);
+                        homeModel.sort(title: buttonTitle, descending: desc);
+                      },
                     ),
                   ),
                   SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                        itemCount: tasks.length,
+                        itemCount: homeModel.tasks.length,
                         itemBuilder: (context, index) {
+                          final Task task = homeModel.tasks[index];
                           return Dismissible(
-                            key: Key(tasks[index].id.toString()),
+                            key: Key(task.id.toString()),
                             onDismissed: (direction) {
                               print(direction);
                               //delete task
                               if (direction == DismissDirection.endToStart) {
                                 //update UI by updating the view model
-                                homeModel.remove(tasks[index].id);
+                                homeModel.tasks.remove(task.id);
                                 //update database
-                                HomeDatabase.instance.delete(tasks[index].id);
+                                HomeDatabase.instance.delete(task.id);
                               } else if (direction ==
                                   DismissDirection.startToEnd) {
-                                homeModel.remove(tasks[index].id);
-                                HomeDatabase.instance.delete(tasks[index].id);
+                                homeModel.tasks.remove(task);
+                                HomeDatabase.instance.delete(task.id);
                                 //TODO: move task to another database
-                              } else
-                                return;
+                              }
+                              setState(() {});
                             },
                             background: Card(
                               child: Container(
@@ -161,20 +163,23 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: InkWell(
                               onTap: () {
-                                Provider.of<EditModel>(context)
-                                    .newTask(tasks[index]);
-                                return Navigator.of(context)
-                                    .push(MaterialPageRoute(
-                                        fullscreenDialog: true,
-                                        builder: (context) => EditPage(
-                                              task: tasks[index],
-                                            )));
+//                                Provider.of<EditModel>(context)
+//                                    .newTask(tasks[index]);
+                                return Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    fullscreenDialog: true,
+                                    builder: (context) => EditPage(
+                                      isNew: false,
+                                      task: homeModel.tasks[index],
+                                    ),
+                                  ),
+                                );
                               },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 8.0),
                                 child: TaskListItem(
-                                  task: tasks[index],
+                                  task: homeModel.tasks[index],
                                 ),
                               ),
                             ),

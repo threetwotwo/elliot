@@ -9,6 +9,7 @@ class Tag {
   Tag({@required this.title, @required this.color});
 
   static final tags = [
+    Tag(title: '', color: Colors.transparent),
     Tag(title: 'animation', color: Colours.baraRed),
     Tag(title: 'architecture', color: Colours.pixelatedGrass),
     Tag(title: 'ui', color: Colours.forgottenPurple),

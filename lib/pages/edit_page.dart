@@ -13,8 +13,9 @@ import 'package:provider/provider.dart';
 
 class EditPage extends StatefulWidget {
   final Task task;
+  final bool isNew;
 
-  const EditPage({Key key, this.task}) : super(key: key);
+  const EditPage({Key key, this.task, this.isNew = true}) : super(key: key);
   @override
   _EditPageState createState() => _EditPageState();
 }
@@ -46,7 +47,7 @@ class _EditPageState extends State<EditPage> {
   @override
   Widget build(BuildContext context) {
     var editModel = Provider.of<EditModel>(context);
-    var taskListModel = Provider.of<HomeModel>(context);
+    var homeModel = Provider.of<HomeModel>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,7 +57,7 @@ class _EditPageState extends State<EditPage> {
           FlatButton(
             onPressed: _titleController.text.isEmpty
                 ? null
-                : () {
+                : () async {
                     if (_titleController.text.isEmpty) return null;
                     final newTask = currentTask.copyWith(
                       tag: editModel.task.tag,
@@ -65,10 +66,12 @@ class _EditPageState extends State<EditPage> {
                       details: _detailsController.text,
                       progress: currentTask.progress,
                       deadline: currentTask.deadline,
-                      dateCreated: DateTime.now(),
                     );
-                    taskListModel.task(newTask);
-                    HomeDatabase.instance.insert(newTask);
+                    widget.isNew
+                        ? homeModel.insert(newTask)
+                        : homeModel.update(id: newTask.id, newTask: newTask);
+                    await HomeDatabase.instance.insert(newTask);
+                    Navigator.of(context).pop();
                   },
             child: Text(
               'Save'.toUpperCase(),
@@ -110,7 +113,7 @@ class _EditPageState extends State<EditPage> {
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        model.task.tag != null
+                        (model.task.tag != null)
                             ? GestureDetector(
                                 onTap: () => goToTagSearchPage(context),
                                 child: Container(

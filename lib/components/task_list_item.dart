@@ -87,17 +87,20 @@ class TaskListItem extends StatelessWidget {
                             ? Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: <Widget>[
-                                  Text(
-                                    formattedDate(task.deadline),
-                                    textAlign: TextAlign.end,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: task.deadline
-                                                    .millisecondsSinceEpoch <
-                                                DateTime.now()
-                                                    .millisecondsSinceEpoch
-                                            ? Colors.red[300]
-                                            : Colors.grey[600]),
+                                  FittedBox(
+                                    child: Text(
+                                      formattedDate(task.deadline),
+                                      maxLines: 1,
+                                      textAlign: TextAlign.end,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: task.deadline
+                                                      .millisecondsSinceEpoch <
+                                                  DateTime.now()
+                                                      .millisecondsSinceEpoch
+                                              ? Colors.red[300]
+                                              : Colors.grey[600]),
+                                    ),
                                   ),
                                   Text(
                                     formattedTime(task.deadline),

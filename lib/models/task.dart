@@ -43,7 +43,7 @@ class Task {
       description: description ?? this.description,
       details: details ?? this.details,
       deadline: deadline ?? this.deadline,
-      dateCreated: dateCreated ?? this.deadline,
+      dateCreated: this.dateCreated,
       progress: progress ?? this.progress,
     );
   }

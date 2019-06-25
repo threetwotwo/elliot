@@ -7,16 +7,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() => runApp(MyApp());
+Future main() async {
+  final homeModel = await HomeModel.create();
+  runApp(MyApp(
+    homeModel: homeModel,
+  ));
+}
 
 class MyApp extends StatelessWidget {
+  final HomeModel homeModel;
+
+  const MyApp({Key key, this.homeModel}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          builder: (context) => HomeModel(),
+          builder: (context) => homeModel,
         ),
         ChangeNotifierProvider(
           builder: (context) => EditModel(),
@@ -76,12 +85,7 @@ class _MainPageState extends State<MainPage> {
         controller: _pageController,
         onPageChanged: (i) => print(i),
         children: <Widget>[
-          Consumer<HomeModel>(
-            builder: (context, model, _) {
-              model.initTasks();
-              return HomePage();
-            },
-          ),
+          HomePage(),
           Container(
             color: Colors.green,
           ),
