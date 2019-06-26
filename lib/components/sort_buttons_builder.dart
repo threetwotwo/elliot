@@ -1,3 +1,4 @@
+import 'package:elliot/models/sort.dart';
 import 'package:flutter/material.dart';
 
 List<String> buttonTitles = [
@@ -9,14 +10,16 @@ List<String> buttonTitles = [
 ];
 
 class SortButtonBuilder extends StatefulWidget {
-  final String initialSort;
+  final Sort sort;
   final int itemCount;
   final Function(String, bool) onSelected;
+  final Color inactiveColor;
   const SortButtonBuilder({
     Key key,
-    this.initialSort,
     this.itemCount,
     this.onSelected,
+    this.sort,
+    this.inactiveColor = Colors.grey,
   }) : super(key: key);
 
   @override
@@ -24,12 +27,8 @@ class SortButtonBuilder extends StatefulWidget {
 }
 
 class _SortButtonBuilderState extends State<SortButtonBuilder> {
-  String selectedSort;
-
   @override
   void initState() {
-    selectedSort = widget.initialSort;
-    print('initial: $selectedSort');
     super.initState();
   }
 
@@ -42,12 +41,17 @@ class _SortButtonBuilderState extends State<SortButtonBuilder> {
         final buttonTitle = buttonTitles[index];
 
         return SortButton(
-          isSelected: selectedSort == buttonTitle,
+          isDescending: widget.sort.title == buttonTitle
+              ? widget.sort.isDescending
+              : true,
+          isSelected: widget.sort.title == buttonTitle,
           title: buttonTitle,
-          color: buttonTitle == selectedSort ? Colors.black87 : Colors.white,
+          inactiveColor: widget.inactiveColor,
+          color:
+              buttonTitle == widget.sort.title ? Colors.black87 : Colors.white,
           onPressed: (desc) {
             setState(() {
-              selectedSort = buttonTitle;
+              widget.sort.title = buttonTitle;
 //              print('$buttonTitle: desc = $desc');
             });
             widget.onSelected(buttonTitle, desc);
@@ -61,8 +65,10 @@ class _SortButtonBuilderState extends State<SortButtonBuilder> {
 class SortButton extends StatefulWidget {
   final String title;
   final Color color;
+  final Color inactiveColor;
   final Function(bool) onPressed;
   final bool isSelected;
+  final bool isDescending;
 
   SortButton({
     Key key,
@@ -70,6 +76,8 @@ class SortButton extends StatefulWidget {
     this.color,
     @required this.onPressed,
     this.isSelected,
+    this.isDescending = true,
+    this.inactiveColor = Colors.grey,
   }) : super(key: key);
 
   @override
@@ -77,12 +85,16 @@ class SortButton extends StatefulWidget {
 }
 
 class _SortButtonState extends State<SortButton> {
-  bool descending = true;
+  bool descending;
+  @override
+  void initState() {
+    descending = widget.isDescending;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
       margin: EdgeInsets.symmetric(horizontal: 10),
       child: FlatButton(
 //        padding: EdgeInsets.only(left: 8, top: 8, right: 8, bottom: 8),
@@ -95,7 +107,7 @@ class _SortButtonState extends State<SortButton> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
           side: BorderSide(
-              color: widget.isSelected ? widget.color : Colors.grey[300],
+              color: widget.isSelected ? widget.color : widget.inactiveColor,
               width: widget.isSelected ? 1.5 : 0.7),
         ),
         child: Row(
@@ -114,7 +126,8 @@ class _SortButtonState extends State<SortButton> {
                   ? this.widget.title.toUpperCase()
                   : this.widget.title.toUpperCase(),
               style: TextStyle(
-                  color: widget.isSelected ? widget.color : Colors.grey[300],
+                  color:
+                      widget.isSelected ? widget.color : widget.inactiveColor,
                   fontWeight: widget.isSelected
                       ? FontWeight.normal
                       : FontWeight.normal),

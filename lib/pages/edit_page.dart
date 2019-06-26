@@ -34,6 +34,7 @@ class _EditPageState extends State<EditPage> {
     _titleController.text = task.title;
     _descriptionController.text = task.description;
     _detailsController.text = task.details;
+    print(task.toMap());
     super.initState();
   }
 
@@ -138,7 +139,7 @@ class _EditPageState extends State<EditPage> {
                               child: Text(
                                 'remove tag'.toUpperCase(),
                                 style: TextStyle(
-                                    color: Colors.grey,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.normal),
                               ),
                             ),
@@ -155,7 +156,7 @@ class _EditPageState extends State<EditPage> {
                   trailing: null,
                 ),
                 AddTaskTextField(
-//                    autoFocus: true,
+                  autoFocus: currentTask.title.isEmpty ? true : false,
                   controller: _titleController,
                   hint: 'Task Name',
                   icon: Icons.adjust,
@@ -164,6 +165,7 @@ class _EditPageState extends State<EditPage> {
                   controller: _descriptionController,
                   hint: 'Short Description',
                   icon: Icons.details,
+                  textColor: Colors.black87,
                 ),
                 SizedBox(height: 20),
                 DetailsTextField(
@@ -232,6 +234,7 @@ class AddTaskTextField extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool autoFocus;
+  final Color textColor;
 
   const AddTaskTextField({
     Key key,
@@ -239,6 +242,7 @@ class AddTaskTextField extends StatelessWidget {
     @required this.hint,
     @required this.icon,
     this.autoFocus = false,
+    this.textColor = Colors.black,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -255,13 +259,14 @@ class AddTaskTextField extends StatelessWidget {
               Expanded(
                 child: TextField(
                   autofocus: this.autoFocus,
-                  style: TextStyle(fontSize: 17),
+                  style: TextStyle(fontSize: 17, color: this.textColor),
                   textCapitalization: TextCapitalization.sentences,
                   controller: this.controller,
                   decoration: InputDecoration(
                     hintText: hint,
                     border: InputBorder.none,
                   ),
+                  onChanged: ((s) => controller.text),
                 ),
               ),
             ],
@@ -404,7 +409,7 @@ class DetailsTextField extends StatelessWidget {
             onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
             child: Text(
               'done'.toUpperCase(),
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),

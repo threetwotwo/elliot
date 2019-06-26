@@ -10,14 +10,13 @@ class SharedPrefsManager {
     final prefs = await SharedPreferences.getInstance();
     final title = prefs.getString('sortTitle');
     final desc = prefs.getBool('sortDesc');
-    return Sort(title: title, isDescending: desc);
+    return Sort(title: title ?? 'date added', isDescending: desc ?? true);
   }
 
   Future<void> setSort({String title, bool isDesc}) async {
-//    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 //    String formattedTitle;
-//
-//    prefs.setString('sortTitle', title);
-//    prefs.setBool('sortDesc', isDesc);
+    prefs.setString('sortTitle', title);
+    prefs.setBool('sortDesc', isDesc);
   }
 }

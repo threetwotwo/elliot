@@ -13,23 +13,21 @@ class TagResult extends StatelessWidget {
   const TagResult({Key key, this.tag, this.onTap}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return tag.title.isEmpty
-        ? SizedBox()
-        : Container(
-            margin: EdgeInsets.all(20),
-            height: 50,
-            child: FittedBox(
-              child: GestureDetector(
-                onTap: () {
-                  print(tag.title);
-                  onTap(this.tag);
-                },
-                child: TagSticker(
-                  tag: this.tag,
-                ),
-              ),
-            ),
-          );
+    return Container(
+      margin: EdgeInsets.all(20),
+      height: 50,
+      child: FittedBox(
+        child: GestureDetector(
+          onTap: () {
+            print(tag.title);
+            onTap(this.tag);
+          },
+          child: TagSticker(
+            tag: this.tag,
+          ),
+        ),
+      ),
+    );
   }
 }
 

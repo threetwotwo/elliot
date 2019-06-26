@@ -1,7 +1,10 @@
+import 'package:elliot/data/shared_preferences.dart';
 import 'package:elliot/models/task.dart';
 import 'package:elliot/pages/edit_page.dart';
+import 'package:elliot/pages/history_page.dart';
 import 'package:elliot/pages/home_page.dart';
 import 'package:elliot/view_models/edit_model.dart';
+import 'package:elliot/view_models/history_model.dart';
 import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,15 +12,28 @@ import 'package:provider/provider.dart';
 
 Future main() async {
   final homeModel = await HomeModel.create();
+  final historyModel = await HistoryModel.create();
+  final savedSort = await SharedPrefsManager.instance.getSort();
+  homeModel.savedSort = savedSort;
+  if (savedSort != null)
+    homeModel.sort(title: savedSort.title, descending: savedSort.isDescending);
+  print(
+      'savedSort: title = ${savedSort.title}, desc = ${savedSort.isDescending}');
   runApp(MyApp(
     homeModel: homeModel,
+    historyModel: historyModel,
   ));
 }
 
 class MyApp extends StatelessWidget {
   final HomeModel homeModel;
+  final HistoryModel historyModel;
 
-  const MyApp({Key key, this.homeModel}) : super(key: key);
+  const MyApp({
+    Key key,
+    @required this.homeModel,
+    @required this.historyModel,
+  }) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -28,10 +44,14 @@ class MyApp extends StatelessWidget {
           builder: (context) => homeModel,
         ),
         ChangeNotifierProvider(
+          builder: (context) => historyModel,
+        ),
+        ChangeNotifierProvider(
           builder: (context) => EditModel(),
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           // Define the default brightness and colors.
@@ -86,9 +106,7 @@ class _MainPageState extends State<MainPage> {
         onPageChanged: (i) => print(i),
         children: <Widget>[
           HomePage(),
-          Container(
-            color: Colors.green,
-          ),
+          HistoryPage(),
         ],
       ),
       bottomNavigationBar: BottomAppBar(

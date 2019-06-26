@@ -1,13 +1,9 @@
-import 'package:date_format/date_format.dart';
 import 'package:elliot/components/empty_screen.dart';
 import 'package:elliot/components/headline.dart';
-import 'package:elliot/components/sort_buttons_builder.dart';
 import 'package:elliot/components/task_list_item.dart';
 import 'package:elliot/data/history_database_manager.dart';
 import 'package:elliot/data/home_database_manager.dart';
-import 'package:elliot/data/shared_preferences.dart';
 import 'package:elliot/models/task.dart';
-import 'package:elliot/view_models/edit_model.dart';
 import 'package:elliot/view_models/history_model.dart';
 import 'package:elliot/view_models/home_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,29 +12,30 @@ import 'package:provider/provider.dart';
 
 import 'edit_page.dart';
 
-class HomePage extends StatefulWidget {
+class HistoryPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _HistoryPageState createState() => _HistoryPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final homeModel = Provider.of<HomeModel>(context);
-    final historyModel = Provider.of<HistoryModel>(context);
+    HistoryModel historyModel = Provider.of<HistoryModel>(context);
 
     return Scaffold(
+      backgroundColor: Colors.green[400],
       appBar: AppBar(
         title: Headline(
-          title: 'Tasks',
+          title: 'completed',
           trailing: GestureDetector(
-            onLongPress: () {
+            onTap: () {
               showDialog(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
                       title: Text('Are you sure you want to '
-                          'delete all tasks?'),
+                          'clear your history?'),
                       content: Text(
                         'This action cannot be undone.',
                         style: TextStyle(color: Colors.grey),
@@ -46,8 +43,8 @@ class _HomePageState extends State<HomePage> {
                       actions: <Widget>[
                         FlatButton(
                           onPressed: () {
-                            HomeDatabase.instance.deleteAll();
-                            homeModel.deleteAll();
+                            HistoryDatabase.instance.deleteAll();
+                            historyModel.deleteAll();
                             return Navigator.of(context).pop();
                           },
                           child: Text(
@@ -63,31 +60,23 @@ class _HomePageState extends State<HomePage> {
                     );
                   });
             },
-            child: Text(
-              formatDate(DateTime.now(), [
-                D,
-                ', ',
-                M,
-                ' ',
-                d,
-              ]).toUpperCase(),
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 15,
-              ),
+            child: Icon(
+              Icons.delete,
+              size: 24,
             ),
           ),
         ),
       ),
       body: SafeArea(
-        child: homeModel.tasks.isEmpty
+        child: historyModel.tasks.isEmpty
             ? EmptyScreen(
                 icon: Text(
-                  '(◡‿◡✿)',
-                  style: TextStyle(fontSize: 40, letterSpacing: 1),
+                  '🕳️',
+                  style: TextStyle(fontSize: 80, color: Colors.white),
                 ),
-                title: '️You currently have no tasks.',
-                buttonTitle: 'Add new task',
+                color: Colors.white,
+                title: 'You have not completed anything. \n\n\n   Get to '
+                    'work! ',
                 onButtonPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -102,52 +91,55 @@ class _HomePageState extends State<HomePage> {
             : Column(
                 children: <Widget>[
                   SizedBox(height: 20),
-                  SizedBox(
-                    height: 40,
-                    child: SortButtonBuilder(
-                      sort: homeModel.savedSort,
-                      onSelected: (String buttonTitle, bool desc) {
-                        print('$buttonTitle: desc = $desc');
-                        SharedPrefsManager.instance
-                            .setSort(title: buttonTitle, isDesc: desc);
-                        homeModel.sort(title: buttonTitle, descending: desc);
-                      },
-                    ),
-                  ),
+//                  SizedBox(
+//                    height: 40,
+//                    child: SortButtonBuilder(
+//                      inactiveColor: Colors.grey[200],
+////                      sort: historyModel.savedSort,
+////                      initialSort: historyModel.savedSort.title,
+//                      onSelected: (String buttonTitle, bool desc) {
+//                        print('$buttonTitle: desc = $desc');
+//                        SharedPrefsManager.instance
+//                            .setSort(title: buttonTitle, isDesc: desc);
+//                        historyModel.sort(title: buttonTitle, descending: desc);
+//                      },
+//                    ),
+//                  ),
                   SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                        itemCount: homeModel.tasks.length,
+                        itemCount: historyModel.tasks.length,
                         itemBuilder: (context, index) {
-                          final Task task = homeModel.tasks[index];
+                          final Task task = historyModel.tasks[index];
                           return Dismissible(
                             key: Key(task.id.toString()),
                             onDismissed: (direction) {
                               print(direction);
-                              //delete task
+                              //restore task
                               if (direction == DismissDirection.endToStart) {
                                 //update UI by updating the view model
-                                homeModel.remove(task.id);
+                                homeModel.insert(task);
+                                historyModel.remove(task.id);
                                 //update database
-                                HomeDatabase.instance.delete(task.id);
+                                HomeDatabase.instance.insert(task);
+                                HistoryDatabase.instance.delete(task.id);
                               } else if (direction ==
                                   DismissDirection.startToEnd) {
-                                homeModel.remove(task.id);
-                                HomeDatabase.instance.delete(task.id);
-                                historyModel.insert(task);
-                                HistoryDatabase.instance.insert(task);
+                                historyModel.tasks.remove(task);
+                                HistoryDatabase.instance.delete(task.id);
+                                //TODO: move task to another database
                               }
                               setState(() {});
                             },
                             background: Card(
                               child: Container(
-                                color: Colors.green,
+                                color: Colors.red,
                                 child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
                                       child: Icon(
-                                        Icons.check,
+                                        Icons.delete,
                                         color: Colors.white,
                                       ),
                                     )),
@@ -155,13 +147,13 @@ class _HomePageState extends State<HomePage> {
                             ),
                             secondaryBackground: Card(
                               child: Container(
-                                color: Colors.red,
+                                color: Colors.green,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Padding(
                                     padding: const EdgeInsets.all(10.0),
                                     child: Icon(
-                                      Icons.delete,
+                                      Icons.restore,
                                       size: 30,
                                       color: Colors.white,
                                     ),
@@ -171,23 +163,24 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: InkWell(
                               onTap: () {
-                                Provider.of<EditModel>(context)
-                                    .newTask(homeModel.tasks[index]);
-                                return Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    fullscreenDialog: true,
-                                    builder: (context) => EditPage(
-                                      isNew: false,
-                                      task: homeModel.tasks[index],
-                                    ),
-                                  ),
-                                );
+//                                Provider.of<EditModel>(context)
+//                                    .newTask(historyModel.tasks[index]);
+//                                return Navigator.of(context).push(
+//                                  MaterialPageRoute(
+//                                    fullscreenDialog: true,
+//                                    builder: (context) => EditPage(
+//                                      isNew: false,
+//                                      task: historyModel.tasks[index],
+//                                    ),
+//                                  ),
+//                                );
                               },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 8.0),
                                 child: TaskListItem(
-                                  task: homeModel.tasks[index],
+                                  showProgress: false,
+                                  task: historyModel.tasks[index],
                                 ),
                               ),
                             ),

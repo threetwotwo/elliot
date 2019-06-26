@@ -1,26 +1,26 @@
-import 'package:elliot/data/home_database_manager.dart';
+import 'package:elliot/data/history_database_manager.dart';
 import 'package:elliot/models/sort.dart';
 import 'package:elliot/models/task.dart';
 import 'package:flutter/foundation.dart';
 
-class HomeModel extends ChangeNotifier {
+class HistoryModel extends ChangeNotifier {
   List<Task> _tasks = [];
   Sort savedSort;
 
-  HomeModel._();
+  HistoryModel._();
 
-  static Future<HomeModel> create() async {
-    HomeModel model = HomeModel._();
+  static Future<HistoryModel> create() async {
+    HistoryModel model = HistoryModel._();
     model.initTasks();
-
     return model;
   }
 
   List<Task> get tasks => _tasks;
 
   Future initTasks() async {
-    print('initTasks()');
-    _tasks = await HomeDatabase.instance.getTasks();
+    _tasks = await HistoryDatabase.instance.getTasks();
+    print('history initTasks: $_tasks');
+
     notifyListeners();
   }
 

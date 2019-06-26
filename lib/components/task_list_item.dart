@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 class TaskListItem extends StatelessWidget {
   final Task task;
   final TextStyle _progressStyle = TextStyle(
-    color: Colors.deepPurple[900],
-    fontSize: 15,
+    color: Colors.indigo[600],
+    fontSize: 14,
     fontWeight: FontWeight.bold,
   );
   final TextStyle _titleStyle = TextStyle(
     color: Colors.black,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: FontWeight.normal,
 //    letterSpacing: 0.3,
   );
@@ -21,7 +21,13 @@ class TaskListItem extends StatelessWidget {
     fontSize: 15,
   );
 
-  TaskListItem({Key key, @required this.task}) : super(key: key);
+  final bool showProgress;
+
+  TaskListItem({
+    Key key,
+    @required this.task,
+    this.showProgress = true,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -37,7 +43,9 @@ class TaskListItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Text(
-                    task.progress.toString() + '%',
+                    showProgress
+                        ? task.progress.toString() + '%'
+                        : formattedDate(task.dateCreated),
                     style: _progressStyle,
                   ),
                   Transform.scale(
@@ -93,7 +101,7 @@ class TaskListItem extends StatelessWidget {
                                       maxLines: 1,
                                       textAlign: TextAlign.end,
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.normal,
                                           color: task.deadline
                                                       .millisecondsSinceEpoch <
                                                   DateTime.now()
@@ -125,9 +133,9 @@ class TaskListItem extends StatelessWidget {
   }
 }
 
-String formattedDate(DateTime deadline) {
-  final shouldShowYear = deadline.year > DateTime.now().year;
-  return formatDate(deadline, [
+String formattedDate(DateTime date) {
+  final shouldShowYear = date.year > DateTime.now().year;
+  return formatDate(date, [
     M,
     ' ',
     d,
@@ -136,8 +144,8 @@ String formattedDate(DateTime deadline) {
   ]).toUpperCase();
 }
 
-String formattedTime(DateTime deadline) {
-  return formatDate(deadline, [
+String formattedTime(DateTime dateTime) {
+  return formatDate(dateTime, [
     h,
     ':',
     nn,

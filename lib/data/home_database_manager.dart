@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class HomeDatabase {
   // This is the actual database filename that is saved in the docs directory.
-  static final _databaseName = "MyDatabase.db";
+  static final _databaseName = "HomeDatabase.db";
   // Increment this version when you need to change the schema.
   static final _databaseVersion = 1;
 
